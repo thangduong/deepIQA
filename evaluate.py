@@ -37,11 +37,11 @@ if FR:
 else:
      model = Model(top=args.top)
 
-cuda.cudnn_enabled = True
+cuda.cudnn_enabled = False
 cuda.check_cuda_available()
 xp = cuda.cupy
 serializers.load_hdf5(args.model, model)
-model.to_gpu()
+#model.to_gpu()
 
 if FR:
      ref_img = cv2.imread(args.REF)

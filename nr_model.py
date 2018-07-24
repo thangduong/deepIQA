@@ -43,13 +43,13 @@ class Model(chainer.Chain):
     def forward(self, x_data, y_data, train=True, n_patches=32):
 
         if not isinstance(x_data, Variable):
-            x = Variable(x_data, volatile=not train)
+            x = Variable(x_data) #, volatile=not train)
         else:
             x = x_data
             x_data = x.data
-    	self.n_images = y_data.shape[0]
-    	self.n_patches = x_data.shape[0]
-    	self.n_patches_per_image = self.n_patches / self.n_images
+        self.n_images = y_data.shape[0]
+        self.n_patches = x_data.shape[0]
+        self.n_patches_per_image = self.n_patches / self.n_images
 
         h = F.relu(self.conv1(x))
         h = F.relu(self.conv2(h))
@@ -80,11 +80,11 @@ class Model(chainer.Chain):
         if self.top == "weighted":
             a = F.dropout(F.relu(self.fc1_a(h_)), train=train, ratio=0.5)
             a = F.relu(self.fc2_a(a))+0.000001
-            t = Variable(y_data, volatile=not train)
+            t = Variable(y_data) #, volatile=not train)
             self.weighted_loss(h, a, t)
         elif self.top == "patchwise":
-            a = Variable(xp.ones_like(h.data), volatile=not train)
-            t = Variable(xp.repeat(y_data, n_patches), volatile=not train)
+            a = Variable(xp.ones_like(h.data)) #, volatile=not train)
+            t = Variable(xp.repeat(y_data, n_patches)) #, volatile=not train)
             self.patchwise_loss(h, a, t)
 
 
@@ -95,18 +95,18 @@ class Model(chainer.Chain):
 
 
     def patchwise_loss(self, h, a, t):
-    	self.loss = F.sum(abs(h - F.reshape(t, (-1,1)))) 
-    	self.loss /= self.n_patches
-    	if self.n_images > 1:
-	    	h = F.split_axis(h, self.n_images, 0)
-	    	a = F.split_axis(a, self.n_images, 0)
+        self.loss = F.sum(abs(h - F.reshape(t, (-1,1)))) 
+        self.loss /= self.n_patches
+        if self.n_images > 1:
+            h = F.split_axis(h, self.n_images, 0)
+            a = F.split_axis(a, self.n_images, 0)
         else:
             h, a = [h], [a]
-    	self.y = h
-    	self.a = a
+        self.y = h
+        self.a = a
 
     def weighted_loss(self, h, a, t):
-    	self.loss = 0
+        self.loss = 0
         if self.n_images > 1:
             h = F.split_axis(h, self.n_images, 0)
             a = F.split_axis(a, self.n_images, 0)
